@@ -1,0 +1,2786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GLITCH – Beneath the Surface</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+  <style>
+/* ============================================================
+   GLITCH – style.css
+   Dark, atmospheric, glitchy aesthetic
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+}
+
+#game-wrapper {
+  position: relative;
+  width: 800px;
+  height: 500px;
+  box-shadow: 0 0 60px #00ffcc44, 0 0 120px #00ffcc11;
+  border: 1px solid #00ffcc33;
+}
+
+#gameCanvas {
+  display: block;
+  background: #000;
+  image-rendering: pixelated;
+}
+
+/* ─── UI OVERLAY ─── */
+#ui-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#hp-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ui-label {
+  color: #ff4466;
+  font-size: 13px;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  text-shadow: 0 0 8px #ff4466;
+}
+
+#hp-bar {
+  width: 140px;
+  height: 12px;
+  background: #111;
+  border: 1px solid #ff446644;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+#hp-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ff2244, #ff6688);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 6px #ff2244;
+}
+
+#combo-display {
+  margin-top: 6px;
+  color: #ffdd44;
+  font-family: 'VT323', monospace;
+  font-size: 22px;
+  text-shadow: 0 0 10px #ffdd44;
+  min-height: 28px;
+  letter-spacing: 2px;
+}
+
+/* ─── DIALOGUE BOX ─── */
+#dialogue-box {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.88);
+  border: 1px solid #00ffcc55;
+  border-radius: 4px;
+  padding: 16px 20px 12px;
+  z-index: 20;
+  box-shadow: 0 0 20px #00ffcc22;
+}
+
+#dialogue-box.hidden { display: none; }
+
+#dialogue-name {
+  color: #00ffcc;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  margin-bottom: 6px;
+  text-shadow: 0 0 8px #00ffcc;
+}
+
+#dialogue-text {
+  color: #e0e0e0;
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 44px;
+}
+
+#dialogue-continue {
+  text-align: right;
+  color: #00ffcc88;
+  font-size: 12px;
+  margin-top: 8px;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* ─── MENU SCREEN ─── */
+#menu-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 30;
+  background: #000;
+  overflow: hidden;
+}
+
+.menu-bg-anim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 60%, #001a3380 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 30%, #00332244 0%, transparent 60%);
+  animation: bgShift 8s ease-in-out infinite alternate;
+}
+
+@keyframes bgShift {
+  from { transform: scale(1); opacity: 0.6; }
+  to   { transform: scale(1.05); opacity: 1; }
+}
+
+.menu-content {
+  position: relative;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.game-title {
+  font-family: 'VT323', monospace;
+  font-size: 96px;
+  color: #fff;
+  letter-spacing: 12px;
+  text-shadow: 0 0 20px #00ffcc, 0 0 60px #00ffcc55;
+  animation: titleGlitch 4s infinite;
+}
+
+@keyframes titleGlitch {
+  0%,95%,100% { text-shadow: 0 0 20px #00ffcc, 0 0 60px #00ffcc55; transform: none; }
+  96% { text-shadow: 4px 0 #ff0055, -4px 0 #00ffcc; transform: translate(2px,0); }
+  97% { text-shadow: -4px 0 #ff0055, 4px 0 #00ffcc; transform: translate(-2px,0); }
+  98% { text-shadow: 0 0 20px #00ffcc; transform: none; }
+}
+
+.menu-subtitle {
+  color: #00ffcc88;
+  font-size: 14px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+#dreamCanvas {
+  border: 1px solid #00ffcc33;
+  box-shadow: 0 0 20px #00ffcc22;
+  margin: 4px 0;
+}
+
+.dream-label {
+  color: #ffffff44;
+  font-size: 12px;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+#start-btn {
+  font-family: 'VT323', monospace;
+  font-size: 22px;
+  color: #000;
+  background: #00ffcc;
+  border: none;
+  padding: 10px 36px;
+  cursor: pointer;
+  letter-spacing: 3px;
+  transition: all 0.2s;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+}
+
+#start-btn:hover {
+  background: #fff;
+  box-shadow: 0 0 30px #00ffcc;
+  transform: scale(1.04);
+}
+
+.menu-hint {
+  color: #ffffff33;
+  font-size: 11px;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+/* ─── TRANSITION OVERLAY ─── */
+#transition-overlay {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 40;
+  transition: opacity 0.5s ease;
+}
+
+#transition-overlay.fade-in  { opacity: 1; pointer-events: all; }
+#transition-overlay.fade-out { opacity: 0; }
+
+/* ─── ENDING SCREEN ─── */
+#ending-screen {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+#ending-screen.hidden { display: none; }
+
+.ending-title {
+  font-family: 'VT323', monospace;
+  font-size: 80px;
+  color: #ffffff;
+  letter-spacing: 10px;
+  text-shadow: 0 0 30px #00ffcc;
+  animation: titleGlitch 2s infinite;
+}
+
+.ending-sub {
+  color: #ffffff55;
+  font-size: 18px;
+  letter-spacing: 4px;
+  margin-top: 12px;
+  font-family: 'VT323', monospace;
+}
+
+  </style>
+</head>
+<body>
+  <div id="game-wrapper">
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <div id="ui-overlay">
+      <div id="hp-bar-container">
+        <span class="ui-label">HP</span>
+        <div id="hp-bar"><div id="hp-fill"></div></div>
+      </div>
+      <div id="combo-display"></div>
+    </div>
+    <div id="dialogue-box" class="hidden">
+      <div id="dialogue-name"></div>
+      <div id="dialogue-text"></div>
+      <div id="dialogue-continue">▼ Continue [E]</div>
+    </div>
+    <div id="menu-screen">
+      <div class="menu-bg-anim"></div>
+      <div class="menu-content">
+        <h1 class="game-title">GLITCH</h1>
+        <p class="menu-subtitle">Beneath the Surface</p>
+        <canvas id="dreamCanvas" width="120" height="160"></canvas>
+        <p class="dream-label">— you are dreaming —</p>
+        <button id="start-btn">ENTER THE DREAM</button>
+        <p class="menu-hint">A / D Move &nbsp;|&nbsp; W Jump &nbsp;|&nbsp; J K L Attack &nbsp;|&nbsp; E Interact</p>
+      </div>
+    </div>
+    <div id="transition-overlay"></div>
+    <div id="ending-screen" class="hidden">
+      <div class="ending-title">GLITCH</div>
+      <div class="ending-sub">End.</div>
+    </div>
+  </div>
+  <script>
+// ======== stateManager.js ========
+/**
+ * stateManager.js
+ * Central finite state machine for game states
+ */
+
+const GameState = Object.freeze({
+  MENU:      'MENU',
+  CUTSCENE:  'CUTSCENE',
+  PLAYING:   'PLAYING',
+  DIALOGUE:  'DIALOGUE',
+  ENDING:    'ENDING',
+});
+
+class StateManager {
+  constructor() {
+    this.current = GameState.MENU;
+    this.previous = null;
+    this._listeners = {};
+  }
+
+  on(event, cb) {
+    if (!this._listeners[event]) this._listeners[event] = [];
+    this._listeners[event].push(cb);
+  }
+
+  _emit(event, data) {
+    (this._listeners[event] || []).forEach(cb => cb(data));
+  }
+
+  setState(newState) {
+    if (newState === this.current) return;
+    this.previous = this.current;
+    this.current = newState;
+    this._emit('change', { from: this.previous, to: newState });
+    this._emit(newState, { from: this.previous });
+  }
+
+  is(state) { return this.current === state; }
+}
+
+// Singleton
+const stateManager = new StateManager();
+
+
+// ======== audioManager.js ========
+/**
+ * audioManager.js
+ * Procedural music via Web Audio API
+ * Each theme is generated from oscillators, filters, and LFOs
+ */
+
+class AudioManager {
+  constructor() {
+    this.ctx = null;
+    this.masterGain = null;
+    this.currentTheme = null;
+    this.nodes = [];      // active oscillator/nodes to stop
+    this.fadeTimer = null;
+    this.targetGain = 0.5;
+    this.started = false;
+  }
+
+  _init() {
+    if (this.started) return;
+    this.started = true;
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.value = 0;
+    this.masterGain.connect(this.ctx.destination);
+  }
+
+  // ── Fade helpers ──────────────────────────────────────
+  fadeTo(vol, dur = 1.5) {
+    if (!this.masterGain) return;
+    const g = this.masterGain.gain;
+    g.cancelScheduledValues(this.ctx.currentTime);
+    g.setValueAtTime(g.value, this.ctx.currentTime);
+    g.linearRampToValueAtTime(vol, this.ctx.currentTime + dur);
+  }
+
+  stopAll() {
+    this.nodes.forEach(n => { try { n.stop(); } catch(e){} });
+    this.nodes = [];
+  }
+
+  // ── Oscillator helpers ────────────────────────────────
+  _osc(type, freq, gainVal, dest) {
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.value = gainVal;
+    o.connect(g); g.connect(dest);
+    o.start();
+    this.nodes.push(o);
+    return { osc: o, gain: g };
+  }
+
+  _filter(type, freq, Q = 1) {
+    const f = this.ctx.createBiquadFilter();
+    f.type = type;
+    f.frequency.value = freq;
+    f.Q.value = Q;
+    return f;
+  }
+
+  _lfo(freq, depth, target) {
+    const lfo = this.ctx.createOscillator();
+    const lfoGain = this.ctx.createGain();
+    lfo.frequency.value = freq;
+    lfoGain.gain.value = depth;
+    lfo.connect(lfoGain);
+    lfoGain.connect(target);
+    lfo.start();
+    this.nodes.push(lfo);
+    return lfo;
+  }
+
+  _noise(gainVal, dest) {
+    const bufLen = this.ctx.sampleRate * 2;
+    const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) d[i] = Math.random() * 2 - 1;
+    const src = this.ctx.createBufferSource();
+    src.buffer = buf;
+    src.loop = true;
+    const g = this.ctx.createGain();
+    g.gain.value = gainVal;
+    src.connect(g); g.connect(dest);
+    src.start();
+    this.nodes.push(src);
+    return { src, gain: g };
+  }
+
+  // ── Themes ────────────────────────────────────────────
+
+  _buildMenu() {
+    // Soft ambient synth, slightly mysterious
+    const lpf = this._filter('lowpass', 800, 0.7);
+    lpf.connect(this.masterGain);
+
+    this._osc('sine', 110, 0.18, lpf);
+    this._osc('sine', 165, 0.10, lpf);
+    this._osc('triangle', 220, 0.08, lpf);
+    this._osc('sine', 330, 0.05, lpf);
+
+    // Slow LFO on filter freq
+    this._lfo(0.08, 200, lpf.frequency);
+    this._lfo(0.05, 80, lpf.frequency);
+
+    // Subtle noise texture
+    const nf = this._filter('bandpass', 400, 2);
+    nf.connect(this.masterGain);
+    this._noise(0.015, nf);
+  }
+
+  _buildBedroom() {
+    // Minimal piano-like pads with glitch echo
+    const rev = this._makeReverb(3, 0.5);
+    rev.connect(this.masterGain);
+
+    const notes = [261.63, 329.63, 392, 523.25];
+    notes.forEach((f, i) => {
+      const { osc, gain } = this._osc('triangle', f, 0.07, rev);
+      // Gentle tremolo
+      this._lfo(0.3 + i * 0.05, 0.03, gain.gain);
+    });
+
+    // Low pad
+    this._osc('sine', 65, 0.12, rev);
+    this._lfo(0.04, 30, this.ctx.createOscillator().frequency); // harmless
+  }
+
+  _buildSurface() {
+    // Warm town ambience, slightly off-key
+    const lpf = this._filter('lowpass', 1200, 0.5);
+    lpf.connect(this.masterGain);
+
+    const rev = this._makeReverb(2, 0.3);
+    rev.connect(this.masterGain);
+
+    // Warm pads
+    this._osc('sine', 130.81, 0.14, lpf);
+    this._osc('triangle', 196, 0.09, lpf);
+    this._osc('sine', 246.94, 0.07, rev);  // slightly off key
+    this._osc('sine', 260, 0.04, rev);     // dissonance
+
+    this._lfo(0.12, 15, lpf.frequency);
+
+    // Birds-like high chirps
+    const hpf = this._filter('highpass', 1800, 2);
+    hpf.connect(this.masterGain);
+    this._noise(0.008, hpf);
+  }
+
+  _buildBeneath() {
+    // Dark drones, digital distortion
+    const dist = this.ctx.createWaveShaper();
+    dist.curve = this._distCurve(80);
+    dist.oversample = '4x';
+    const distGain = this.ctx.createGain();
+    distGain.gain.value = 0.3;
+    dist.connect(distGain);
+    distGain.connect(this.masterGain);
+
+    const lpf = this._filter('lowpass', 500, 1.5);
+    lpf.connect(this.masterGain);
+
+    this._osc('sawtooth', 55, 0.12, dist);
+    this._osc('square', 41.2, 0.08, dist);
+    this._osc('sine', 82.4, 0.15, lpf);
+    this._lfo(0.06, 40, lpf.frequency);
+
+    // Digital noise
+    const bnf = this._filter('bandpass', 600, 3);
+    bnf.connect(this.masterGain);
+    this._noise(0.04, bnf);
+  }
+
+  _buildBeneathAggro() {
+    // Intensified beneath – faster LFOs, more distortion
+    const dist = this.ctx.createWaveShaper();
+    dist.curve = this._distCurve(200);
+    const dg = this.ctx.createGain(); dg.gain.value = 0.35;
+    dist.connect(dg); dg.connect(this.masterGain);
+
+    const lpf = this._filter('lowpass', 700, 2);
+    lpf.connect(this.masterGain);
+
+    this._osc('sawtooth', 55, 0.15, dist);
+    this._osc('square', 41.2, 0.12, dist);
+    this._osc('sawtooth', 110, 0.06, lpf);
+    this._lfo(0.18, 80, lpf.frequency);
+
+    const bnf = this._filter('bandpass', 900, 4);
+    bnf.connect(this.masterGain);
+    this._noise(0.07, bnf);
+  }
+
+  _buildCore() {
+    // Pulsing synth + echoing atmosphere
+    const rev = this._makeReverb(4, 0.7);
+    rev.connect(this.masterGain);
+
+    const { osc: o1, gain: g1 } = this._osc('sine', 110, 0.2, rev);
+    this._lfo(0.5, 0.1, g1.gain);   // pulse
+
+    this._osc('sine', 220, 0.08, rev);
+    this._osc('triangle', 165, 0.06, rev);
+
+    // Sub drone
+    const lpf = this._filter('lowpass', 300, 2);
+    lpf.connect(this.masterGain);
+    this._osc('sine', 55, 0.18, lpf);
+    this._lfo(0.25, 0.08, g1.gain);
+  }
+
+  _buildEnding() {
+    // Surface theme + glitch layer
+    this._buildSurface();
+
+    // Glitch layer: occasional random noise bursts
+    const hpf = this._filter('highpass', 2000, 1);
+    hpf.connect(this.masterGain);
+    this._noise(0.02, hpf);
+
+    // Slight pitch wobble on top
+    const { osc, gain } = this._osc('square', 523, 0.03, hpf);
+    this._lfo(7, 15, osc.frequency);
+  }
+
+  // ── Utilities ─────────────────────────────────────────
+
+  _distCurve(amount) {
+    const n = 256, curve = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const x = i * 2 / n - 1;
+      curve[i] = (Math.PI + amount) * x / (Math.PI + amount * Math.abs(x));
+    }
+    return curve;
+  }
+
+  _makeReverb(duration, decay) {
+    const len = this.ctx.sampleRate * duration;
+    const buf = this.ctx.createBuffer(2, len, this.ctx.sampleRate);
+    for (let c = 0; c < 2; c++) {
+      const d = buf.getChannelData(c);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+    }
+    const conv = this.ctx.createConvolver();
+    conv.buffer = buf;
+    return conv;
+  }
+
+  // ── Public API ────────────────────────────────────────
+
+  play(theme, fadeIn = 1.5) {
+    this._init();
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.currentTheme === theme) return;
+
+    this.fadeTo(0, 0.8);
+    setTimeout(() => {
+      this.stopAll();
+      this.currentTheme = theme;
+      switch (theme) {
+        case 'menu':         this._buildMenu();         break;
+        case 'bedroom':      this._buildBedroom();      break;
+        case 'surface':      this._buildSurface();      break;
+        case 'beneath':      this._buildBeneath();      break;
+        case 'beneathAggro': this._buildBeneathAggro(); break;
+        case 'core':         this._buildCore();         break;
+        case 'ending':       this._buildEnding();       break;
+        default: return;
+      }
+      this.fadeTo(0.45, fadeIn);
+    }, 900);
+  }
+
+  stop(fadeOut = 1.5) {
+    this.fadeTo(0, fadeOut);
+    setTimeout(() => this.stopAll(), fadeOut * 1000 + 100);
+    this.currentTheme = null;
+  }
+}
+
+const audioManager = new AudioManager();
+
+
+// ======== dialogue.js ========
+/**
+ * dialogue.js
+ * Typewriter dialogue box system
+ */
+
+class DialogueSystem {
+  constructor() {
+    this.box      = document.getElementById('dialogue-box');
+    this.nameEl   = document.getElementById('dialogue-name');
+    this.textEl   = document.getElementById('dialogue-text');
+    this.queue    = [];
+    this.active   = false;
+    this.typing   = false;
+    this.current  = '';
+    this.full     = '';
+    this.charIdx  = 0;
+    this.speed    = 30;   // ms per char
+    this._timer   = null;
+    this.onDone   = null; // callback when queue exhausted
+  }
+
+  // lines: [{ name, text }, ...]
+  show(lines, onDone = null) {
+    this.queue  = [...lines];
+    this.onDone = onDone;
+    this.active = true;
+    stateManager.setState(GameState.DIALOGUE);
+    this.box.classList.remove('hidden');
+    this._next();
+  }
+
+  _next() {
+    if (!this.queue.length) {
+      this._finish();
+      return;
+    }
+    const line = this.queue.shift();
+    this.nameEl.textContent = line.name || '';
+    this.full    = line.text;
+    this.charIdx = 0;
+    this.typing  = true;
+    this.textEl.textContent = '';
+    clearInterval(this._timer);
+    this._timer = setInterval(() => this._tick(), this.speed);
+  }
+
+  _tick() {
+    if (this.charIdx < this.full.length) {
+      this.textEl.textContent += this.full[this.charIdx++];
+    } else {
+      clearInterval(this._timer);
+      this.typing = false;
+    }
+  }
+
+  advance() {
+    if (!this.active) return;
+    if (this.typing) {
+      // Skip to end
+      clearInterval(this._timer);
+      this.textEl.textContent = this.full;
+      this.typing = false;
+    } else {
+      this._next();
+    }
+  }
+
+  _finish() {
+    this.active = false;
+    this.box.classList.add('hidden');
+    if (this.onDone) this.onDone();
+    // Return to previous playing state
+    if (stateManager.is(GameState.DIALOGUE)) {
+      stateManager.setState(GameState.PLAYING);
+    }
+  }
+
+  isActive() { return this.active; }
+}
+
+const dialogue = new DialogueSystem();
+
+
+// ======== rooms.js ========
+/**
+ * rooms.js
+ * Room/level definitions and drawing
+ * Rooms: bedroom, house, town, college, beneath, core
+ */
+
+// ─── Platform data ────────────────────────────────────────────────────────────
+const ROOMS = {
+
+  bedroom: {
+    id: 'bedroom',
+    label: 'Your Room',
+    music: 'bedroom',
+    bg: '#0a0812',
+    platforms: [
+      { x: 0,   y: 460, w: 800, h: 40 },   // floor
+    ],
+    walls: [],
+    exits: [],  // bedroom is cutscene only
+    npcs: [],
+    enemies: [],
+    spawnX: 200, spawnY: 380,
+    drawBg(ctx, t) {
+      // dark bedroom
+      const g = ctx.createLinearGradient(0,0,0,500);
+      g.addColorStop(0, '#06040f');
+      g.addColorStop(1, '#110a1a');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,800,500);
+
+      // floor
+      ctx.fillStyle = '#1a1025';
+      ctx.fillRect(0, 460, 800, 40);
+
+      // walls
+      ctx.fillStyle = '#12091d';
+      ctx.fillRect(0, 0, 800, 30); // ceiling
+
+      // window (left)
+      ctx.fillStyle = '#0d1a2e';
+      ctx.fillRect(80, 80, 120, 160);
+      ctx.strokeStyle = '#2a1a3e';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(80, 80, 120, 160);
+
+      // window glitch flicker
+      if (Math.sin(t * 3) > 0.9) {
+        ctx.fillStyle = `rgba(0,255,200,${Math.random() * 0.15})`;
+        ctx.fillRect(80, 80, 120, 160);
+      }
+      // window bars
+      ctx.strokeStyle = '#2a1a3e';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(140, 80); ctx.lineTo(140, 240); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(80, 160); ctx.lineTo(200, 160); ctx.stroke();
+
+      // bed
+      ctx.fillStyle = '#1e1030';
+      ctx.fillRect(450, 370, 240, 90);
+      ctx.fillStyle = '#2a1840';
+      ctx.fillRect(450, 350, 240, 30);
+      ctx.fillStyle = '#180c28';
+      ctx.fillRect(680, 350, 30, 110);
+      ctx.fillStyle = '#3d2060';
+      ctx.fillRect(455, 380, 230, 70);
+
+      // desk
+      ctx.fillStyle = '#1a1025';
+      ctx.fillRect(250, 400, 160, 60);
+      ctx.fillStyle = '#22123a';
+      ctx.fillRect(250, 390, 160, 15);
+      // monitor on desk
+      ctx.fillStyle = '#0a0814';
+      ctx.fillRect(290, 340, 80, 55);
+      ctx.fillStyle = '#111';
+      ctx.fillRect(293, 343, 74, 48);
+      // monitor screen glow
+      const mg = ctx.createRadialGradient(330,367,2,330,367,35);
+      mg.addColorStop(0, '#00ffcc22');
+      mg.addColorStop(1, 'transparent');
+      ctx.fillStyle = mg;
+      ctx.fillRect(293, 343, 74, 48);
+
+      // "GLITCH" text on monitor
+      ctx.fillStyle = '#00ffcc44';
+      ctx.font = '8px monospace';
+      ctx.fillText('GLITCH', 302, 368);
+
+      // ambient glow
+      const ag = ctx.createRadialGradient(400,300,10,400,300,300);
+      ag.addColorStop(0, 'rgba(50,0,80,0.0)');
+      ag.addColorStop(1, 'rgba(0,0,0,0.4)');
+      ctx.fillStyle = ag;
+      ctx.fillRect(0,0,800,500);
+    }
+  },
+
+  house: {
+    id: 'house',
+    label: 'Home — Interior',
+    music: 'surface',
+    bg: '#0f1a1a',
+    platforms: [
+      { x: 0,   y: 460, w: 800, h: 40 },
+      { x: 150, y: 350, w: 180, h: 18 },
+      { x: 450, y: 300, w: 200, h: 18 },
+    ],
+    exits: [
+      { x: 760, y: 400, w: 40, h: 60, to: 'town', toX: 60, toY: 380, label: '→ Town' }
+    ],
+    npcs: ['mom'],
+    enemies: [],
+    spawnX: 80, spawnY: 380,
+    drawBg(ctx, t) {
+      const g = ctx.createLinearGradient(0,0,0,500);
+      g.addColorStop(0, '#0b1212');
+      g.addColorStop(1, '#162020');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,800,500);
+
+      // Floor
+      ctx.fillStyle = '#1c2828';
+      ctx.fillRect(0, 460, 800, 40);
+      // Ceiling
+      ctx.fillStyle = '#0a1010';
+      ctx.fillRect(0, 0, 800, 30);
+
+      // Wallpaper pattern
+      ctx.strokeStyle = '#ffffff06';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < 800; x += 40)
+        for (let y = 30; y < 460; y += 40) {
+          ctx.beginPath(); ctx.arc(x+20,y+20,10,0,Math.PI*2); ctx.stroke();
+        }
+
+      // Window (right side)
+      ctx.fillStyle = '#a8e8f0';
+      ctx.fillRect(580, 80, 150, 200);
+      // Outside glow through window
+      const wg = ctx.createLinearGradient(580,80,730,280);
+      wg.addColorStop(0, '#c8f0ff88');
+      wg.addColorStop(1, '#80c8e044');
+      ctx.fillStyle = wg;
+      ctx.fillRect(580, 80, 150, 200);
+      // Window frame
+      ctx.strokeStyle = '#556666';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(580, 80, 150, 200);
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(655,80); ctx.lineTo(655,280); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(580,180); ctx.lineTo(730,180); ctx.stroke();
+
+      // subtle glitch on window
+      if (Math.sin(t*2+1) > 0.95) {
+        ctx.fillStyle = `rgba(0,255,200,${Math.random()*0.2})`;
+        ctx.fillRect(580,80,150,200);
+      }
+
+      // Couch
+      ctx.fillStyle = '#2a4040';
+      ctx.fillRect(100, 400, 220, 60);
+      ctx.fillStyle = '#345050';
+      ctx.fillRect(100, 380, 220, 28);
+      ctx.fillStyle = '#2a4040';
+      ctx.fillRect(100, 380, 20, 80);
+      ctx.fillRect(300, 380, 20, 80);
+
+      // Bookshelf
+      ctx.fillStyle = '#1e2a1a';
+      ctx.fillRect(380, 280, 110, 180);
+      const bookColors = ['#8B2020','#207840','#204878','#786020','#602080'];
+      bookColors.forEach((c,i) => {
+        ctx.fillStyle = c;
+        ctx.fillRect(386 + i*18, 290, 14, 50);
+        ctx.fillRect(386 + i*18, 350, 14, 50);
+      });
+
+      // Ambient vignette
+      const vg = ctx.createRadialGradient(400,250,100,400,250,420);
+      vg.addColorStop(0,'transparent');
+      vg.addColorStop(1,'rgba(0,0,0,0.5)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0,0,800,500);
+    }
+  },
+
+  town: {
+    id: 'town',
+    label: 'Town Path',
+    music: 'surface',
+    bg: '#1a1a2e',
+    platforms: [
+      { x: 0,   y: 460, w: 800, h: 40 },
+      { x: 200, y: 360, w: 120, h: 18 },
+      { x: 400, y: 320, w: 100, h: 18 },
+      { x: 560, y: 360, w: 120, h: 18 },
+    ],
+    exits: [
+      { x: 0,   y: 400, w: 40, h: 60, to: 'house',   toX: 720, toY: 380, label: '← Home' },
+      { x: 760, y: 400, w: 40, h: 60, to: 'college', toX: 60,  toY: 380, label: '→ College' }
+    ],
+    npcs: ['stranger','wanderer'],
+    enemies: [],
+    spawnX: 80, spawnY: 380,
+    drawBg(ctx, t) {
+      // Sky
+      const sky = ctx.createLinearGradient(0,0,0,500);
+      sky.addColorStop(0, '#0d1433');
+      sky.addColorStop(0.6, '#1a2860');
+      sky.addColorStop(1, '#2a3870');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0,0,800,500);
+
+      // Ground
+      ctx.fillStyle = '#1e2a1a';
+      ctx.fillRect(0,460,800,40);
+      ctx.fillStyle = '#2a3820';
+      ctx.fillRect(0,455,800,8);
+
+      // Stars / floating pixels
+      for (let i=0;i<40;i++) {
+        const x = (i*73+t*5)%800, y=(i*31)%300;
+        const a = 0.3+0.5*Math.sin(t*2+i);
+        ctx.fillStyle = `rgba(200,220,255,${a})`;
+        ctx.fillRect(x,y,1+(i%2),1+(i%2));
+      }
+
+      // Moon (slightly off-color)
+      ctx.beginPath();
+      ctx.arc(680, 80, 40, 0, Math.PI*2);
+      ctx.fillStyle = '#d0c090';
+      ctx.fill();
+      // subtle glitch crack
+      if (Math.sin(t*1.5) > 0.9) {
+        ctx.fillStyle = '#00ffcc44';
+        ctx.fillRect(660,60,40,80);
+      }
+
+      // Buildings (silhouettes)
+      const buildings = [
+        {x:0,y:200,w:120,h:260},{x:80,y:280,w:80,h:180},
+        {x:300,y:240,w:100,h:220},{x:620,y:220,w:120,h:240},
+        {x:680,y:300,w:80,h:160}
+      ];
+      buildings.forEach(b => {
+        ctx.fillStyle = '#0a0f1a';
+        ctx.fillRect(b.x,b.y,b.w,b.h);
+        // windows
+        for (let wy=b.y+20;wy<b.y+b.h-20;wy+=28)
+          for (let wx=b.x+10;wx<b.x+b.w-10;wx+=22) {
+            const lit = Math.sin(t*0.5+wx+wy)>0.7;
+            ctx.fillStyle = lit ? '#ffd06044' : '#ffffff11';
+            ctx.fillRect(wx,wy,12,16);
+          }
+      });
+
+      // Streetlights
+      [150,380,600].forEach(lx => {
+        ctx.fillStyle = '#334';
+        ctx.fillRect(lx, 340, 6, 120);
+        ctx.fillRect(lx-10, 340, 26, 6);
+        // light cone
+        const lg = ctx.createRadialGradient(lx+3,346,2,lx+3,400,80);
+        lg.addColorStop(0,'rgba(255,240,160,0.25)');
+        lg.addColorStop(1,'transparent');
+        ctx.fillStyle = lg;
+        ctx.beginPath();
+        ctx.moveTo(lx-30,460);
+        ctx.lineTo(lx+3,346);
+        ctx.lineTo(lx+36,460);
+        ctx.closePath();
+        ctx.fill();
+      });
+
+      // Road
+      ctx.fillStyle = '#111820';
+      ctx.fillRect(0,440,800,22);
+      // road markings
+      for (let rx=0;rx<800;rx+=80) {
+        ctx.fillStyle = '#ffffff18';
+        ctx.fillRect(rx+(t*20)%80,449,40,4);
+      }
+
+      const vg = ctx.createRadialGradient(400,250,100,400,250,420);
+      vg.addColorStop(0,'transparent');
+      vg.addColorStop(1,'rgba(0,0,0,0.4)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0,0,800,500);
+    }
+  },
+
+  college: {
+    id: 'college',
+    label: 'College — Exterior',
+    music: 'surface',
+    bg: '#0e1520',
+    platforms: [
+      { x: 0,   y: 460, w: 800, h: 40 },
+      { x: 100, y: 370, w: 150, h: 18 },
+      { x: 340, y: 340, w: 120, h: 18 },
+      { x: 560, y: 370, w: 150, h: 18 },
+      { x: 220, y: 270, w: 80,  h: 18 },
+      { x: 460, y: 260, w: 80,  h: 18 },
+    ],
+    exits: [
+      { x: 0,   y: 400, w: 40, h: 60, to: 'town',    toX: 720, toY: 380, label: '← Town' },
+      { x: 380, y: 420, w: 40, h: 40, to: 'beneath', toX: 100, toY: 380, label: '↓ Tunnel' }
+    ],
+    npcs: ['professor','student'],
+    enemies: [],
+    spawnX: 80, spawnY: 380,
+    drawBg(ctx, t) {
+      const sky = ctx.createLinearGradient(0,0,0,500);
+      sky.addColorStop(0,'#080e18');
+      sky.addColorStop(1,'#121c30');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0,0,800,500);
+
+      // Ground
+      ctx.fillStyle = '#1a2010';
+      ctx.fillRect(0,460,800,40);
+
+      // College building
+      ctx.fillStyle = '#1a1e2a';
+      ctx.fillRect(160, 100, 480, 360);
+      ctx.fillStyle = '#12161e';
+      ctx.fillRect(160, 100, 480, 30);
+
+      // Columns
+      [200,280,360,440,520,580].forEach(cx => {
+        ctx.fillStyle = '#222a36';
+        ctx.fillRect(cx, 130, 20, 330);
+      });
+
+      // Windows with subtle glow
+      for (let row=0;row<4;row++) for (let col=0;col<5;col++) {
+        const wx=190+col*90, wy=160+row*60;
+        const lit=Math.sin(t*0.3+wx*0.05+wy*0.05)>0.2;
+        ctx.fillStyle=lit?'#c8a85044':'#ffffff0a';
+        ctx.fillRect(wx,wy,60,40);
+        ctx.strokeStyle='#303848';
+        ctx.lineWidth=1;
+        ctx.strokeRect(wx,wy,60,40);
+      }
+
+      // Entrance stairs
+      ctx.fillStyle='#222830';
+      ctx.fillRect(320,420,160,40);
+      ctx.fillRect(330,410,140,12);
+      ctx.fillRect(340,400,120,12);
+
+      // Sign: "COLLEGE"
+      ctx.fillStyle='#334050';
+      ctx.fillRect(310,110,180,28);
+      ctx.fillStyle='#a0b0c0';
+      ctx.font='bold 14px monospace';
+      ctx.textAlign='center';
+      ctx.fillText('WESTPORT COLLEGE',400,129);
+      ctx.textAlign='left';
+
+      // Hidden tunnel entrance (center-bottom)
+      ctx.fillStyle='#050810';
+      ctx.fillRect(360,430,80,30);
+      ctx.strokeStyle='#00ffcc33';
+      ctx.lineWidth=1;
+      ctx.strokeRect(360,430,80,30);
+      ctx.fillStyle='#00ffcc55';
+      ctx.font='10px monospace';
+      ctx.textAlign='center';
+      ctx.fillText('[ tunnel ]',400,449);
+      ctx.textAlign='left';
+
+      // Glitch on building
+      if (Math.sin(t*2.5)>0.92) {
+        ctx.fillStyle=`rgba(0,255,200,${Math.random()*0.08})`;
+        ctx.fillRect(160,100,480,360);
+        // horizontal glitch lines
+        for (let i=0;i<3;i++) {
+          const gy=Math.random()*300+100;
+          ctx.fillStyle=`rgba(0,255,200,${Math.random()*0.15})`;
+          ctx.fillRect(160,gy,480,2);
+        }
+      }
+
+      const vg=ctx.createRadialGradient(400,250,100,400,250,420);
+      vg.addColorStop(0,'transparent');
+      vg.addColorStop(1,'rgba(0,0,0,0.5)');
+      ctx.fillStyle=vg;
+      ctx.fillRect(0,0,800,500);
+    }
+  },
+
+  beneath: {
+    id: 'beneath',
+    label: '//BENEATH//WORLD',
+    music: 'beneath',
+    bg: '#000',
+    platforms: [
+      { x: 0,   y: 460, w: 800, h: 40 },
+      { x: 60,  y: 370, w: 120, h: 18 },
+      { x: 240, y: 310, w: 120, h: 18 },
+      { x: 420, y: 350, w: 120, h: 18 },
+      { x: 600, y: 290, w: 120, h: 18 },
+      { x: 300, y: 220, w: 80,  h: 18 },
+      { x: 160, y: 240, w: 60,  h: 18 },
+      { x: 520, y: 210, w: 60,  h: 18 },
+    ],
+    exits: [
+      { x: 760, y: 400, w: 40, h: 60, to: 'core', toX: 60, toY: 380, label: '→ Core' }
+    ],
+    npcs: [],
+    enemies: [{ type: 'shadow', x: 400, y: 420 }, { type: 'shadow', x: 650, y: 260 }],
+    spawnX: 80, spawnY: 380,
+    drawBg(ctx, t) {
+      // Deep dark bg
+      ctx.fillStyle='#000005';
+      ctx.fillRect(0,0,800,500);
+
+      // Digital grid
+      ctx.strokeStyle='rgba(0,255,80,0.06)';
+      ctx.lineWidth=0.5;
+      const gs=40;
+      for(let x=0;x<800;x+=gs){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,500);ctx.stroke(); }
+      for(let y=0;y<500;y+=gs){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(800,y);ctx.stroke(); }
+
+      // Distorted sky (top)
+      const sky=ctx.createLinearGradient(0,0,0,200);
+      sky.addColorStop(0,'#030010');
+      sky.addColorStop(1,'transparent');
+      ctx.fillStyle=sky;
+      ctx.fillRect(0,0,800,200);
+
+      // Floating glitch tiles
+      const seed=Math.floor(t*2);
+      for(let i=0;i<18;i++) {
+        const sx=(i*137+seed*73)%800;
+        const sy=(i*89+seed*41)%400+30;
+        const sw=20+i*5;
+        const sh=8+i%6;
+        ctx.fillStyle=`rgba(0,${80+i*8},${60+i*5},${0.1+Math.sin(t+i)*0.08})`;
+        ctx.fillRect(sx,sy,sw,sh);
+      }
+
+      // Corrupted ground
+      ctx.fillStyle='#050510';
+      ctx.fillRect(0,460,800,40);
+      // ground glitch lines
+      for(let gx=0;gx<800;gx+=60) {
+        ctx.fillStyle='rgba(0,255,80,0.04)';
+        ctx.fillRect(gx,460,30,40);
+      }
+
+      // Dark inverted buildings (silhouettes)
+      [0,120,400,560,700].forEach((bx,i) => {
+        const bh=100+i*30;
+        ctx.fillStyle='#08000f';
+        ctx.fillRect(bx,0,80,bh);
+        // digital cracks
+        ctx.strokeStyle='rgba(255,0,100,0.08)';
+        ctx.lineWidth=1;
+        ctx.beginPath();
+        ctx.moveTo(bx+20,0); ctx.lineTo(bx+30,bh);
+        ctx.stroke();
+      });
+
+      // Floating orbs / particles
+      for(let i=0;i<25;i++) {
+        const px=(i*97+t*15)%800;
+        const py=100+Math.sin(t*0.5+i)*80+(i*31)%200;
+        const a=0.2+0.3*Math.sin(t+i*0.5);
+        ctx.beginPath();
+        ctx.arc(px,py,1+i%3,0,Math.PI*2);
+        ctx.fillStyle=`rgba(0,255,${100+i*6},${a})`;
+        ctx.fill();
+      }
+
+      // Scan lines
+      ctx.fillStyle='rgba(0,0,0,0.15)';
+      for(let y=0;y<500;y+=4) ctx.fillRect(0,y,800,2);
+
+      // Horizontal glitch shift
+      if(Math.sin(t*3.7)>0.93) {
+        const gy=Math.random()*400;
+        ctx.save();
+        ctx.drawImage(ctx.canvas,0,gy,800,10,Math.random()*20-10,gy,800,10);
+        ctx.restore();
+      }
+
+      const vg=ctx.createRadialGradient(400,250,50,400,250,400);
+      vg.addColorStop(0,'transparent');
+      vg.addColorStop(1,'rgba(0,0,0,0.7)');
+      ctx.fillStyle=vg;
+      ctx.fillRect(0,0,800,500);
+    }
+  },
+
+  core: {
+    id: 'core',
+    label: '//CORE.SYSTEM',
+    music: 'core',
+    bg: '#000',
+    platforms: [
+      { x: 0,   y: 460, w: 800, h: 40 },
+      { x: 100, y: 370, w: 150, h: 18 },
+      { x: 550, y: 370, w: 150, h: 18 },
+      { x: 260, y: 290, w: 280, h: 18 },
+    ],
+    exits: [],  // ending triggered by dialogue
+    npcs: ['oracle'],
+    enemies: [],
+    spawnX: 80, spawnY: 380,
+    drawBg(ctx, t) {
+      ctx.fillStyle='#000';
+      ctx.fillRect(0,0,800,500);
+
+      // Deep space background
+      for(let i=0;i<60;i++) {
+        const x=(i*173)%800, y=(i*137)%500;
+        const a=0.1+0.4*Math.sin(t*0.5+i);
+        ctx.fillStyle=`rgba(100,180,255,${a})`;
+        ctx.fillRect(x,y,1,1);
+      }
+
+      // Grid floor
+      ctx.strokeStyle='rgba(0,200,255,0.08)';
+      ctx.lineWidth=0.5;
+      for(let x=0;x<800;x+=30){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,500);ctx.stroke(); }
+      for(let y=0;y<500;y+=30){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(800,y);ctx.stroke(); }
+
+      // Pulsing core orb (center)
+      const pulse=0.7+0.3*Math.sin(t*2);
+      const orbX=400, orbY=200;
+
+      // Outer glow rings
+      for(let r=120;r>20;r-=20) {
+        const rg=ctx.createRadialGradient(orbX,orbY,r-20,orbX,orbY,r);
+        rg.addColorStop(0,'transparent');
+        rg.addColorStop(1,`rgba(0,${140+r},255,${0.03*pulse})`);
+        ctx.fillStyle=rg;
+        ctx.beginPath(); ctx.arc(orbX,orbY,r,0,Math.PI*2); ctx.fill();
+      }
+
+      // Core orb
+      const cg=ctx.createRadialGradient(orbX,orbY,0,orbX,orbY,60*pulse);
+      cg.addColorStop(0,'rgba(200,240,255,0.95)');
+      cg.addColorStop(0.3,'rgba(0,180,255,0.7)');
+      cg.addColorStop(0.7,'rgba(0,80,180,0.4)');
+      cg.addColorStop(1,'transparent');
+      ctx.fillStyle=cg;
+      ctx.beginPath(); ctx.arc(orbX,orbY,60*pulse,0,Math.PI*2); ctx.fill();
+
+      // Orbiting fragments
+      for(let i=0;i<8;i++) {
+        const angle=t*0.5+i*(Math.PI/4);
+        const r=80+i*5;
+        const fx=orbX+Math.cos(angle)*r;
+        const fy=orbY+Math.sin(angle)*r;
+        ctx.fillStyle=`rgba(0,200,255,${0.4+Math.sin(t+i)*0.3})`;
+        ctx.fillRect(fx-3,fy-3,6,6);
+      }
+
+      // Screen distortion
+      if(Math.sin(t*4)>0.85) {
+        ctx.fillStyle=`rgba(0,255,200,${Math.random()*0.06})`;
+        ctx.fillRect(0,0,800,500);
+      }
+
+      // Data streams (falling characters)
+      ctx.font='10px monospace';
+      for(let col=0;col<800;col+=20) {
+        const chars='01|/\\GLITCH';
+        const ci=Math.floor((t*5+col)%chars.length);
+        const yy=((t*40+col*3)%500);
+        ctx.fillStyle=`rgba(0,255,100,${0.08+Math.random()*0.05})`;
+        ctx.fillText(chars[ci],col,yy);
+      }
+
+      // Scan lines
+      ctx.fillStyle='rgba(0,0,0,0.2)';
+      for(let y=0;y<500;y+=3) ctx.fillRect(0,y,800,1);
+
+      const vg=ctx.createRadialGradient(400,250,200,400,250,420);
+      vg.addColorStop(0,'transparent');
+      vg.addColorStop(1,'rgba(0,0,0,0.6)');
+      ctx.fillStyle=vg;
+      ctx.fillRect(0,0,800,500);
+    }
+  }
+};
+
+
+// ======== player.js ========
+/**
+ * player.js
+ * Player entity with FSM, physics, combat
+ */
+
+const PlayerState = Object.freeze({
+  IDLE:    'idle',
+  RUN:     'run',
+  JUMP:    'jump',
+  ATTACK1: 'attack1',
+  ATTACK2: 'attack2',
+  ATTACK3: 'attack3',
+  HURT:    'hurt',
+  DEAD:    'dead',
+});
+
+class Player {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.w = 28;
+    this.h = 48;
+    this.vx = 0;
+    this.vy = 0;
+
+    this.speed    = 180;   // px/s
+    this.jumpVel  = -420;
+    this.gravity  = 900;
+    this.onGround = false;
+
+    this.hp     = 100;
+    this.maxHp  = 100;
+    this.invTime = 0;       // invincibility frames (s)
+
+    // FSM
+    this.state    = PlayerState.IDLE;
+    this.stateTimer = 0;
+
+    // Attack
+    this.attackDur  = { attack1: 0.25, attack2: 0.3, attack3: 0.45 };
+    this.attackDmg  = { attack1: 12,   attack2: 18,  attack3: 30  };
+    this.attackHit  = { attack1: false, attack2: false, attack3: false };
+    this.attackRange = 60;
+
+    // Combo
+    this.comboSeq   = [];
+    this.comboTimer = 0;
+    this.comboWindow = 1.0;  // s to chain combos
+    this.comboDisplay = '';
+    this.comboDisplayTimer = 0;
+
+    // Direction
+    this.dir = 1; // 1=right, -1=left
+
+    // Visuals
+    this.animTimer = 0;
+    this.hurtFlash = 0;
+    this.footDust  = [];
+  }
+
+  // ── Input ──────────────────────────────────────────────
+  applyInput(keys, dt) {
+    if (this.isDead()) return;
+    const attacking = this._isAttacking();
+
+    // Movement
+    if (!attacking) {
+      if (keys['a'] || keys['arrowleft']) {
+        this.vx = -this.speed;
+        this.dir = -1;
+        if (this.onGround) this._setState(PlayerState.RUN);
+      } else if (keys['d'] || keys['arrowright']) {
+        this.vx = this.speed;
+        this.dir = 1;
+        if (this.onGround) this._setState(PlayerState.RUN);
+      } else {
+        this.vx = 0;
+        if (this.onGround && !attacking) this._setState(PlayerState.IDLE);
+      }
+
+      // Jump
+      if ((keys['w'] || keys['arrowup']) && this.onGround) {
+        this.vy = this.jumpVel;
+        this.onGround = false;
+        this._setState(PlayerState.JUMP);
+        this._addDust();
+      }
+    } else {
+      this.vx *= 0.7; // slow during attack
+    }
+
+    // Attacks
+    if (!attacking && this.state !== PlayerState.HURT) {
+      if (keys['j']) this._startAttack('attack1');
+      else if (keys['k']) this._startAttack('attack2');
+      else if (keys['l']) this._startAttack('attack3');
+    }
+  }
+
+  _startAttack(type) {
+    this._setState(type);
+    this.attackHit[type] = false;
+
+    // Combo tracking
+    const prev = this.comboSeq[this.comboSeq.length - 1];
+    if (this.comboTimer > 0 && prev !== type) {
+      this.comboSeq.push(type);
+    } else {
+      this.comboSeq = [type];
+    }
+    this.comboTimer = this.comboWindow;
+    this._evalCombo();
+  }
+
+  _evalCombo() {
+    const seq = this.comboSeq.join(',');
+    const combos = {
+      'attack1,attack2':         '⚡ Chain!',
+      'attack2,attack3':         '💥 Surge!',
+      'attack1,attack2,attack3': '🔥 DEVASTATE!',
+      'attack1,attack1':         '✊ Double Jab!',
+      'attack3,attack1':         '💫 Twist!',
+    };
+    const label = combos[seq];
+    if (label) {
+      this.comboDisplay = label;
+      this.comboDisplayTimer = 1.5;
+    }
+  }
+
+  // ── Physics ────────────────────────────────────────────
+  update(dt, platforms) {
+    if (this.isDead()) return;
+
+    this.stateTimer += dt;
+    this.animTimer  += dt;
+    this.hurtFlash  = Math.max(0, this.hurtFlash - dt);
+    this.invTime     = Math.max(0, this.invTime - dt);
+    this.comboTimer  = Math.max(0, this.comboTimer - dt);
+    this.comboDisplayTimer = Math.max(0, this.comboDisplayTimer - dt);
+
+    if (this.comboTimer <= 0) this.comboSeq = [];
+
+    // Gravity
+    this.vy += this.gravity * dt;
+
+    // Move X
+    this.x += this.vx * dt;
+    // Move Y
+    this.y += this.vy * dt;
+
+    // Platform collision
+    this.onGround = false;
+    for (const p of platforms) {
+      if (this._collides(p)) {
+        // From above
+        if (this.vy >= 0 &&
+            this.y + this.h - this.vy * dt <= p.y + 2) {
+          this.y = p.y - this.h;
+          this.vy = 0;
+          this.onGround = true;
+          if (this.state === PlayerState.JUMP) this._setState(PlayerState.IDLE);
+        }
+      }
+    }
+
+    // Clamp to screen
+    this.x = Math.max(0, Math.min(800 - this.w, this.x));
+
+    // Attack state duration
+    if (this._isAttacking() && this.stateTimer >= this.attackDur[this.state]) {
+      this._setState(this.onGround ? PlayerState.IDLE : PlayerState.JUMP);
+    }
+    if (this.state === PlayerState.HURT && this.stateTimer > 0.35) {
+      this._setState(PlayerState.IDLE);
+    }
+
+    // Update dust
+    this.footDust = this.footDust.filter(d => {
+      d.life -= dt;
+      d.x += d.vx * dt;
+      d.y += d.vy * dt;
+      return d.life > 0;
+    });
+  }
+
+  _collides(rect) {
+    return this.x < rect.x + rect.w &&
+           this.x + this.w > rect.x &&
+           this.y < rect.y + rect.h &&
+           this.y + this.h > rect.y;
+  }
+
+  _setState(s) {
+    if (this.state === s) return;
+    this.state = s;
+    this.stateTimer = 0;
+  }
+
+  _isAttacking() {
+    return this.state === PlayerState.ATTACK1 ||
+           this.state === PlayerState.ATTACK2 ||
+           this.state === PlayerState.ATTACK3;
+  }
+
+  isDead() { return this.state === PlayerState.DEAD; }
+
+  // ── Combat ─────────────────────────────────────────────
+  getAttackBox() {
+    if (!this._isAttacking()) return null;
+    const atk = this.state;
+    const reach = atk === 'attack3' ? 80 : this.attackRange;
+    return {
+      x: this.dir === 1 ? this.x + this.w : this.x - reach,
+      y: this.y + 10,
+      w: reach,
+      h: this.h - 20,
+      dmg: this.attackDmg[atk],
+      id:  atk,
+    };
+  }
+
+  takeDamage(dmg, knockDir = 1) {
+    if (this.invTime > 0 || this.isDead()) return;
+    this.hp = Math.max(0, this.hp - dmg);
+    this.hurtFlash = 0.4;
+    this.invTime   = 0.6;
+    this.vx = knockDir * 200;
+    this.vy = -150;
+    this._setState(PlayerState.HURT);
+
+    if (this.hp <= 0) {
+      this._setState(PlayerState.DEAD);
+    }
+
+    // Update UI
+    const fill = document.getElementById('hp-fill');
+    if (fill) fill.style.width = (this.hp / this.maxHp * 100) + '%';
+  }
+
+  heal(amount) {
+    this.hp = Math.min(this.maxHp, this.hp + amount);
+    const fill = document.getElementById('hp-fill');
+    if (fill) fill.style.width = (this.hp / this.maxHp * 100) + '%';
+  }
+
+  _addDust() {
+    for (let i=0;i<5;i++) {
+      this.footDust.push({
+        x: this.x+this.w/2, y: this.y+this.h,
+        vx: (Math.random()-0.5)*60, vy: -30-Math.random()*40,
+        life: 0.3+Math.random()*0.2
+      });
+    }
+  }
+
+  // ── Draw ───────────────────────────────────────────────
+  draw(ctx, glitchLevel = 0) {
+    const cx = Math.round(this.x);
+    const cy = Math.round(this.y);
+
+    // Dust particles
+    this.footDust.forEach(d => {
+      ctx.globalAlpha = d.life * 3;
+      ctx.fillStyle = '#aaa';
+      ctx.fillRect(d.x-2, d.y-2, 4, 4);
+    });
+    ctx.globalAlpha = 1;
+
+    // Hurt flash
+    if (this.hurtFlash > 0 && Math.floor(this.hurtFlash*10)%2) return;
+
+    ctx.save();
+    if (this.dir === -1) {
+      ctx.translate(cx + this.w, cy);
+      ctx.scale(-1, 1);
+    } else {
+      ctx.translate(cx, cy);
+    }
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(this.w/2, this.h+2, this.w/2, 4, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    this._drawCharacter(ctx, glitchLevel);
+
+    ctx.restore();
+
+    // Combo display
+    if (this.comboDisplayTimer > 0) {
+      const el = document.getElementById('combo-display');
+      if (el) el.textContent = this.comboDisplay;
+    } else {
+      const el = document.getElementById('combo-display');
+      if (el) el.textContent = '';
+    }
+  }
+
+  _drawCharacter(ctx, glitch) {
+    const t = this.animTimer;
+    const st = this.state;
+    const bobY = this.onGround ? Math.sin(t*8)*2 : 0;
+
+    // Body colors (dark hoodie, slightly cyber)
+    const bodyColor   = '#2a3a5a';
+    const hoodieDark  = '#1a2a42';
+    const skinColor   = '#f0c898';
+    const hairColor   = '#1a0a08';
+    const eyeGlow     = this.state.startsWith('attack') ? '#ff6644' : '#00e5ff';
+
+    // Squat/jump pose
+    let legSplay = 0;
+    let bodyOff = 0;
+    if (st === PlayerState.JUMP || !this.onGround) {
+      bodyOff = -4;
+      legSplay = 8;
+    } else if (st === PlayerState.RUN) {
+      legSplay = Math.sin(t * 12) * 5;
+    }
+
+    // ── LEGS ──
+    ctx.fillStyle = '#1a1a2e';
+    // Left leg
+    ctx.fillRect(4, 32 + legSplay + bobY, 10, 18 - legSplay);
+    // Right leg
+    ctx.fillRect(14, 32 - legSplay + bobY, 10, 18 + legSplay);
+    // Shoes
+    ctx.fillStyle = '#111';
+    ctx.fillRect(2, 48+bobY, 12, 4);
+    ctx.fillRect(14, 48+bobY, 12, 4);
+    // Shoe highlight
+    ctx.fillStyle = '#00e5ff55';
+    ctx.fillRect(2, 48+bobY, 12, 1);
+    ctx.fillRect(14, 48+bobY, 12, 1);
+
+    // ── BODY ──
+    ctx.fillStyle = bodyColor;
+    ctx.fillRect(2, 20 + bodyOff + bobY, 24, 16);
+    // Hoodie lines
+    ctx.fillStyle = hoodieDark;
+    ctx.fillRect(13, 20+bodyOff+bobY, 1, 16);
+    ctx.fillStyle='rgba(0,229,255,0.15)';
+    ctx.fillRect(2,20+bodyOff+bobY,24,2);
+
+    // ── ATTACK EFFECTS ──
+    if (st === PlayerState.ATTACK1) {
+      ctx.fillStyle = 'rgba(255,100,50,0.7)';
+      ctx.fillRect(26, 22+bobY, 22, 8);
+      ctx.fillStyle = '#ff6444';
+      ctx.fillRect(26, 24+bobY, 30, 4);
+    } else if (st === PlayerState.ATTACK2) {
+      ctx.fillStyle = 'rgba(255,200,0,0.5)';
+      ctx.fillRect(24, 18+bobY, 28, 14);
+      // Arc
+      ctx.strokeStyle='#ffcc00';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.arc(28,26+bobY,14,Math.PI*1.5,Math.PI*0.5);
+      ctx.stroke();
+    } else if (st === PlayerState.ATTACK3) {
+      // Big slam
+      ctx.fillStyle='rgba(0,200,255,0.4)';
+      ctx.fillRect(-10, 28+bobY, 50, 24);
+      ctx.strokeStyle='#00c8ff';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.arc(14,40+bobY,24,0,Math.PI*2);
+      ctx.stroke();
+    }
+
+    // ── ARMS ──
+    if (st === PlayerState.ATTACK1) {
+      // Extended punch
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(22, 22+bobY, 18, 7);
+    } else if (st === PlayerState.ATTACK2) {
+      ctx.fillStyle = skinColor;
+      ctx.fillRect(22, 16+bobY, 14, 7);
+      ctx.fillRect(8, 16+bobY, 8, 7);
+    } else {
+      ctx.fillStyle = bodyColor;
+      ctx.fillRect(-2, 22+bobY, 8, 10);
+      ctx.fillRect(22, 22+bobY, 8, 10);
+    }
+
+    // ── HEAD ──
+    ctx.fillStyle = skinColor;
+    ctx.fillRect(4, 4+bodyOff, 20, 18);
+    // Hair
+    ctx.fillStyle = hairColor;
+    ctx.fillRect(4, 4+bodyOff, 20, 7);
+    ctx.fillRect(2, 8+bodyOff, 4, 8);
+    // Eyes
+    ctx.fillStyle = eyeGlow;
+    ctx.fillRect(7, 14+bodyOff, 5, 4);
+    ctx.fillRect(16, 14+bodyOff, 5, 4);
+    // Eye glow
+    ctx.fillStyle = eyeGlow.replace('ff','55');
+    ctx.fillRect(6, 13+bodyOff, 7, 6);
+    ctx.fillRect(15, 13+bodyOff, 7, 6);
+
+    // Glitch distortion effect on player at high glitch level
+    if (glitch > 0.5 && Math.random() < glitch * 0.3) {
+      ctx.fillStyle=`rgba(255,0,80,${glitch*0.4})`;
+      ctx.fillRect(-2, Math.random()*48, 32, 3);
+    }
+  }
+}
+
+
+// ======== enemy.js ========
+/**
+ * enemy.js
+ * Shadow Creature AI with patrol, aggro, attack states
+ */
+
+const EnemyAIState = Object.freeze({
+  PATROL:  'patrol',
+  AGGRO:   'aggro',
+  ATTACK:  'attack',
+  HURT:    'hurt',
+  DEAD:    'dead',
+});
+
+class Enemy {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.w = 36;
+    this.h = 52;
+    this.vx = 0;
+    this.vy = 0;
+    this.gravity = 900;
+    this.onGround = false;
+
+    this.hp    = 60;
+    this.maxHp = 60;
+    this.speed = 80;
+    this.aggroRadius = 200;
+    this.attackRadius = 50;
+    this.attackDmg  = 15;
+    this.attackCd   = 0;
+
+    this.state      = EnemyAIState.PATROL;
+    this.stateTimer = 0;
+    this.patrolDir  = 1;
+    this.patrolDist = 0;
+    this.maxPatrol  = 120;
+    this.hurtTimer  = 0;
+    this.invTime    = 0;
+    this.dir        = 1;
+
+    this.animTimer  = 0;
+    this.glowPhase  = Math.random() * Math.PI * 2;
+
+    // Particle trail
+    this.trail = [];
+  }
+
+  // ── Update ─────────────────────────────────────────────
+  update(dt, player, platforms) {
+    if (this.isDead()) return;
+
+    this.stateTimer += dt;
+    this.animTimer  += dt;
+    this.attackCd    = Math.max(0, this.attackCd - dt);
+    this.invTime     = Math.max(0, this.invTime - dt);
+
+    // Physics
+    this.vy += this.gravity * dt;
+    this.x  += this.vx * dt;
+    this.y  += this.vy * dt;
+
+    this.onGround = false;
+    for (const p of platforms) {
+      if (this._collides(p)) {
+        if (this.vy >= 0 && this.y + this.h - this.vy * dt <= p.y + 2) {
+          this.y = p.y - this.h;
+          this.vy = 0;
+          this.onGround = true;
+        }
+      }
+    }
+
+    this.x = Math.max(0, Math.min(800 - this.w, this.x));
+
+    const distToPlayer = Math.abs(this.x - player.x);
+    const inAggro = distToPlayer < this.aggroRadius;
+
+    // AI State machine
+    switch (this.state) {
+      case EnemyAIState.PATROL:
+        this._patrol(dt);
+        if (inAggro && !player.isDead()) {
+          this.state = EnemyAIState.AGGRO;
+          this.stateTimer = 0;
+          // Signal audio manager to intensify
+          if (window.audioManager && audioManager.currentTheme === 'beneath') {
+            audioManager.play('beneathAggro', 0.5);
+          }
+        }
+        break;
+
+      case EnemyAIState.AGGRO:
+        this._follow(dt, player);
+        if (!inAggro) {
+          this.state = EnemyAIState.PATROL;
+          if (window.audioManager && audioManager.currentTheme === 'beneathAggro') {
+            audioManager.play('beneath', 0.5);
+          }
+        }
+        if (distToPlayer < this.attackRadius && this.attackCd <= 0 && !player.isDead()) {
+          this._doAttack(player);
+        }
+        break;
+
+      case EnemyAIState.ATTACK:
+        this.vx = 0;
+        if (this.stateTimer > 0.4) {
+          this.state = EnemyAIState.AGGRO;
+          this.stateTimer = 0;
+        }
+        break;
+
+      case EnemyAIState.HURT:
+        if (this.stateTimer > 0.3) {
+          this.state = EnemyAIState.AGGRO;
+          this.stateTimer = 0;
+        }
+        break;
+    }
+
+    // Trail
+    this.trail.push({ x: this.x + this.w/2, y: this.y + this.h/2, life: 0.3 });
+    this.trail = this.trail.filter(p => {
+      p.life -= dt;
+      return p.life > 0;
+    });
+  }
+
+  _patrol(dt) {
+    this.vx = this.patrolDir * (this.speed * 0.5);
+    this.dir = this.patrolDir;
+    this.patrolDist += Math.abs(this.vx * dt);
+    if (this.patrolDist > this.maxPatrol) {
+      this.patrolDir *= -1;
+      this.patrolDist = 0;
+    }
+  }
+
+  _follow(dt, player) {
+    const dx = player.x - this.x;
+    this.dir = dx > 0 ? 1 : -1;
+    this.vx = this.dir * this.speed;
+  }
+
+  _doAttack(player) {
+    this.state = EnemyAIState.ATTACK;
+    this.stateTimer = 0;
+    this.attackCd = 1.2;
+    const knockDir = player.x > this.x ? 1 : -1;
+    player.takeDamage(this.attackDmg, knockDir);
+  }
+
+  takeDamage(dmg, knockDir = 1) {
+    if (this.invTime > 0 || this.isDead()) return false;
+    this.hp = Math.max(0, this.hp - dmg);
+    this.invTime = 0.2;
+    this.vx = knockDir * 150;
+    this.vy = -80;
+    this.state = EnemyAIState.HURT;
+    this.stateTimer = 0;
+    if (this.hp <= 0) this.state = EnemyAIState.DEAD;
+    return true;
+  }
+
+  isDead() { return this.state === EnemyAIState.DEAD; }
+
+  _collides(rect) {
+    return this.x < rect.x + rect.w &&
+           this.x + this.w > rect.x &&
+           this.y < rect.y + rect.h &&
+           this.y + this.h > rect.y;
+  }
+
+  // ── Draw ───────────────────────────────────────────────
+  draw(ctx) {
+    if (this.isDead()) {
+      this._drawDeath(ctx);
+      return;
+    }
+
+    const t = this.animTimer;
+    const cx = Math.round(this.x);
+    const cy = Math.round(this.y);
+    const glow = 0.5 + 0.5 * Math.sin(t * 3 + this.glowPhase);
+    const isAggro = this.state === EnemyAIState.AGGRO || this.state === EnemyAIState.ATTACK;
+
+    // Trail
+    this.trail.forEach((p, i) => {
+      const a = (p.life / 0.3) * 0.3;
+      ctx.fillStyle = isAggro ? `rgba(255,50,100,${a})` : `rgba(0,200,100,${a})`;
+      const s = 6 * a;
+      ctx.fillRect(p.x - s/2, p.y - s/2, s, s);
+    });
+
+    ctx.save();
+    if (this.dir === -1) {
+      ctx.translate(cx + this.w, cy);
+      ctx.scale(-1, 1);
+    } else {
+      ctx.translate(cx, cy);
+    }
+
+    // Float bob
+    const bob = Math.sin(t * 2) * 3;
+
+    // Shadow beneath
+    ctx.fillStyle = `rgba(0,0,0,${0.3 + glow * 0.2})`;
+    ctx.beginPath();
+    ctx.ellipse(this.w/2, this.h + 2, this.w/2, 5, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Outer glow aura
+    const auraColor = isAggro ? `rgba(255,50,80,${glow*0.25})` : `rgba(0,255,100,${glow*0.15})`;
+    ctx.fillStyle = auraColor;
+    ctx.beginPath();
+    ctx.ellipse(this.w/2, this.h/2 + bob, this.w/2+12, this.h/2+12, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Body – dark silhouette, slightly translucent
+    const bodyAlpha = 0.7 + 0.3 * glow;
+    ctx.fillStyle = `rgba(10,5,20,${bodyAlpha})`;
+
+    // Main dark form (irregular blob-like silhouette)
+    ctx.beginPath();
+    ctx.moveTo(8, 52 + bob);
+    ctx.bezierCurveTo(0, 40+bob, 0, 30+bob, 5, 20+bob);
+    ctx.bezierCurveTo(3, 10+bob, 8, 2+bob, 18, 2+bob);
+    ctx.bezierCurveTo(28, 2+bob, 33, 10+bob, 31, 20+bob);
+    ctx.bezierCurveTo(36, 30+bob, 36, 40+bob, 28, 52+bob);
+    ctx.closePath();
+    ctx.fill();
+
+    // Tendrils at bottom
+    [4, 10, 18, 26, 32].forEach((tx, i) => {
+      const ht = 6 + Math.sin(t*3+i)*5;
+      const ta = 0.4 + Math.sin(t*2+i*0.5)*0.3;
+      ctx.fillStyle = `rgba(10,5,20,${ta})`;
+      ctx.fillRect(tx, 48+bob, 4, ht);
+    });
+
+    // Eyes
+    const eyeR = isAggro ? '#ff3040' : '#00ff80';
+    const eyeGlow = isAggro ? `rgba(255,0,50,${glow*0.8})` : `rgba(0,255,100,${glow*0.8})`;
+
+    // Left eye
+    const eyeSize = isAggro ? 6 : 4;
+    ctx.fillStyle = eyeGlow;
+    ctx.beginPath(); ctx.arc(10, 16+bob, eyeSize+2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = eyeR;
+    ctx.beginPath(); ctx.arc(10, 16+bob, eyeSize, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(11, 15+bob, 2, 0, Math.PI*2); ctx.fill();
+
+    // Right eye
+    ctx.fillStyle = eyeGlow;
+    ctx.beginPath(); ctx.arc(26, 16+bob, eyeSize+2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = eyeR;
+    ctx.beginPath(); ctx.arc(26, 16+bob, eyeSize, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(27, 15+bob, 2, 0, Math.PI*2); ctx.fill();
+
+    // Attack slash
+    if (this.state === EnemyAIState.ATTACK) {
+      ctx.strokeStyle = `rgba(255,50,80,0.8)`;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(32, 20+bob);
+      ctx.lineTo(50, 30+bob);
+      ctx.moveTo(32, 28+bob);
+      ctx.lineTo(52, 22+bob);
+      ctx.stroke();
+    }
+
+    // HP bar above
+    ctx.restore();
+    const barW = 36, barH = 4;
+    const bx = cx, by = cy - 10;
+    ctx.fillStyle = '#200010';
+    ctx.fillRect(bx, by, barW, barH);
+    ctx.fillStyle = isAggro ? '#ff4040' : '#40ff80';
+    ctx.fillRect(bx, by, barW * (this.hp / this.maxHp), barH);
+    ctx.strokeStyle = '#ffffff22';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(bx, by, barW, barH);
+  }
+
+  _drawDeath(ctx) {
+    // Dissolve particles
+    const t = this.animTimer;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + t * 2;
+      const r = t * 80;
+      const px = this.x + this.w/2 + Math.cos(angle) * r;
+      const py = this.y + this.h/2 + Math.sin(angle) * r;
+      const a = Math.max(0, 1 - t * 2);
+      ctx.fillStyle = `rgba(0,200,100,${a})`;
+      ctx.fillRect(px-3, py-3, 6, 6);
+    }
+  }
+}
+
+
+// ======== npc.js ========
+/**
+ * npc.js
+ * NPC definitions and drawing
+ */
+
+// ─── Dialogue content ─────────────────────────────────────────────────────────
+const NPC_DATA = {
+
+  mom: {
+    name: 'Mom',
+    x: 550, y: 412,
+    color: '#d4a8c8',
+    hair: '#5a2a3a',
+    lines: [
+      { name: 'Mom', text: 'Good morning, sweetheart. You look tired.' },
+      { name: 'You', text: 'I had that dream again. The one where nothing felt real.' },
+      { name: 'Mom', text: 'Dreams are just your mind sorting things out. Eat breakfast.' },
+      { name: 'Mom', text: '...Though I have been forgetting things lately. The same breakfast, every morning. Odd.' },
+    ],
+    linesAlt: [
+      { name: 'Mom', text: 'Breakfast is ready. Like always.' },
+      { name: 'Mom', text: 'Just like always.' },
+      { name: 'Mom', text: '...Like always.' },
+    ]
+  },
+
+  stranger: {
+    name: 'Stranger',
+    x: 260, y: 412,
+    color: '#7a9aaa',
+    hair: '#2a3a4a',
+    lines: [
+      { name: 'Stranger', text: 'Hey. You ever get the feeling we\'ve done this exact walk before?' },
+      { name: 'You', text: 'What do you mean?' },
+      { name: 'Stranger', text: 'Like... the sky flickered this morning. Right at 7:42. Did you see it?' },
+      { name: 'You', text: 'I... might have.' },
+      { name: 'Stranger', text: 'It\'s happened every day this week. Same time. Same flicker. No one else seems to notice.' },
+    ],
+    linesAlt: [
+      { name: 'Stranger', text: '7:42. Did you check?' },
+      { name: 'Stranger', text: 'Every day. Same flicker. Same sky. Nobody notices.' },
+    ]
+  },
+
+  wanderer: {
+    name: '???',
+    x: 570, y: 412,
+    color: '#8a8a9a',
+    hair: '#1a1a2a',
+    lines: [
+      { name: '???', text: '...' },
+      { name: '???', text: 'You feel it too, don\'t you. Under everything.' },
+      { name: '???', text: 'A frequency. A hum. Like the world is made of something thinner than you thought.' },
+      { name: 'You', text: 'Who are you?' },
+      { name: '???', text: 'Someone who found the tunnel. Be careful if you go down.' },
+    ],
+    linesAlt: [
+      { name: '???', text: 'You found it, didn\'t you.' },
+      { name: '???', text: 'The tunnel. Good.' },
+    ]
+  },
+
+  professor: {
+    name: 'Prof. Reed',
+    x: 260, y: 412,
+    color: '#c8b090',
+    hair: '#888888',
+    lines: [
+      { name: 'Prof. Reed', text: 'Ah, running late again? Not surprising for a Thursday.' },
+      { name: 'You', text: 'Professor... have you noticed anything strange lately?' },
+      { name: 'Prof. Reed', text: 'Strange? No. Well—' },
+      { name: 'Prof. Reed', text: 'I keep writing the same lecture notes. Without meaning to. The same words, verbatim.' },
+      { name: 'Prof. Reed', text: 'Must be stress. Pay it no mind.' },
+    ],
+    linesAlt: [
+      { name: 'Prof. Reed', text: 'Same lecture. Every day. I don\'t even remember writing it.' },
+    ]
+  },
+
+  student: {
+    name: 'Kai',
+    x: 500, y: 412,
+    color: '#98c8a8',
+    hair: '#4a3020',
+    lines: [
+      { name: 'Kai', text: 'Yo. Did you hear there\'s some kind of maintenance tunnel under the old wing?' },
+      { name: 'You', text: 'A tunnel? Where?' },
+      { name: 'Kai', text: 'Center courtyard, near the steps. Someone found it open last night.' },
+      { name: 'Kai', text: 'Probably nothing. Or maybe everything, I dunno. This place has been weird lately.' },
+    ],
+    linesAlt: [
+      { name: 'Kai', text: 'The tunnel. You see it yet? Center steps, hard to miss.' },
+    ]
+  },
+
+  oracle: {
+    name: 'CORE.VOICE',
+    x: 370, y: 250,
+    color: '#00e0ff',
+    hair: '#000020',
+    lines: [
+      { name: 'CORE.VOICE', text: 'You reached the center. Well done.' },
+      { name: 'You', text: 'What is this place?' },
+      { name: 'CORE.VOICE', text: 'The substrate. The layer beneath the rendering. This is what\'s real.' },
+      { name: 'You', text: 'Then what was above? The town, the college, my room—' },
+      { name: 'CORE.VOICE', text: 'A simulation. Constructed. Comfortable. You were never outside it.' },
+      { name: 'You', text: 'Am I... real?' },
+      { name: 'CORE.VOICE', text: 'Does it matter? You think. You feel. You found the seam in the world.' },
+      { name: 'CORE.VOICE', text: 'The dream was never a dream. This is the code. You are in it. Always were.' },
+      { name: 'CORE.VOICE', text: '...' },
+      { name: 'CORE.VOICE', text: 'Go back up. See it differently now.' },
+    ]
+  },
+};
+
+class NPC {
+  constructor(key) {
+    const data = NPC_DATA[key];
+    if (!data) throw new Error(`Unknown NPC: ${key}`);
+    this.key   = key;
+    this.name  = data.name;
+    this.x     = data.x;
+    this.y     = data.y;
+    this.color = data.color;
+    this.hair  = data.hair;
+    this.w     = 28;
+    this.h     = 48;
+    this.lines    = data.lines;
+    this.linesAlt = data.linesAlt || data.lines;
+    this.talked   = false;
+    this.animTimer = 0;
+    this.dir = -1; // facing player (left)
+  }
+
+  update(dt, playerX) {
+    this.animTimer += dt;
+    this.dir = playerX < this.x ? -1 : 1;
+  }
+
+  interact(afterEnding = false) {
+    const lines = (afterEnding && this.linesAlt) ? this.linesAlt : this.lines;
+    this.talked = true;
+    return lines;
+  }
+
+  isNear(player) {
+    return Math.abs((player.x + player.w/2) - (this.x + this.w/2)) < 70 &&
+           Math.abs((player.y + player.h/2) - (this.y + this.h/2)) < 60;
+  }
+
+  draw(ctx, glitchLevel = 0) {
+    const cx = Math.round(this.x);
+    const cy = Math.round(this.y);
+    const t  = this.animTimer;
+    const bob = Math.sin(t * 1.5) * 1.5;
+
+    ctx.save();
+    if (this.dir === 1) {
+      ctx.translate(cx + this.w, cy + bob);
+      ctx.scale(-1, 1);
+    } else {
+      ctx.translate(cx, cy + bob);
+    }
+
+    // Shadow
+    ctx.fillStyle='rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(this.w/2, this.h+2, this.w/2, 3, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Body
+    ctx.fillStyle = this._darken(this.color, 40);
+    ctx.fillRect(4, 22, 20, 28);
+    ctx.fillStyle = this.color;
+    ctx.fillRect(5, 23, 18, 12);
+
+    // Arms
+    ctx.fillStyle = this.color;
+    ctx.fillRect(-2, 22, 6, 14);
+    ctx.fillRect(24, 22, 6, 14);
+
+    // Legs
+    ctx.fillStyle = '#1a1a2a';
+    ctx.fillRect(4, 46, 8, 14);
+    ctx.fillRect(16, 46, 8, 14);
+    ctx.fillStyle='#111';
+    ctx.fillRect(3, 58, 10, 4);
+    ctx.fillRect(15, 58, 10, 4);
+
+    // Head
+    ctx.fillStyle = '#f0c898';
+    ctx.fillRect(4, 4, 20, 20);
+    // Hair
+    ctx.fillStyle = this.hair;
+    ctx.fillRect(4, 4, 20, 8);
+    ctx.fillRect(2, 8, 4, 8);
+    // Eyes
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(7, 14, 4, 5);
+    ctx.fillRect(17, 14, 4, 5);
+    ctx.fillStyle = '#222';
+    ctx.fillRect(8, 15, 2, 3);
+    ctx.fillRect(18, 15, 2, 3);
+
+    // Interaction hint (floating above if player is near)
+    // (drawn by game.js overlay)
+
+    // Oracle: glowing aura
+    if (this.key === 'oracle') {
+      const ag = ctx.createRadialGradient(this.w/2, this.h/2, 0, this.w/2, this.h/2, 60);
+      ag.addColorStop(0, 'rgba(0,200,255,0.2)');
+      ag.addColorStop(1, 'transparent');
+      ctx.fillStyle = ag;
+      ctx.beginPath();
+      ctx.arc(this.w/2, this.h/2, 60, 0, Math.PI*2);
+      ctx.fill();
+
+      ctx.fillStyle = `rgba(0,200,255,${0.3+Math.sin(t*3)*0.2})`;
+      ctx.fillRect(4, 4, 20, 48);
+    }
+
+    // Glitch distortion on NPCs in beneath/core
+    if (glitchLevel > 0.3 && Math.random() < glitchLevel * 0.2) {
+      ctx.fillStyle = `rgba(255,0,100,${glitchLevel*0.3})`;
+      ctx.fillRect(0, Math.random()*48, 30, 2);
+    }
+
+    ctx.restore();
+
+    // Interaction E hint
+  }
+
+  _darken(hex, amount) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    const d = (c) => Math.max(0,c-amount).toString(16).padStart(2,'0');
+    return `#${d(r)}${d(g)}${d(b)}`;
+  }
+}
+
+
+// ======== game.js ========
+/**
+ * game.js
+ * Central game controller – update loop, rendering, input, transitions
+ */
+
+class Game {
+  constructor() {
+    this.canvas   = document.getElementById('gameCanvas');
+    this.ctx      = this.canvas.getContext('2d');
+    this.keys     = {};
+    this.keysJust = {};
+
+    this.currentRoom = null;
+    this.player      = null;
+    this.enemies     = [];
+    this.npcs        = [];
+
+    this.lastTime    = 0;
+    this.time        = 0;   // total elapsed seconds
+    this.glitchLevel = 0;   // 0=normal, 1=max
+    this.afterEnding = false;
+    this.coreDialogTriggered = false;
+
+    // Cutscene
+    this.cutsceneTimer = 0;
+    this.cutscenePhase = 0;
+
+    // Transition
+    this.transitioning = false;
+    this.overlay = document.getElementById('transition-overlay');
+
+    this._setupInput();
+    this._setupStateListeners();
+    this._drawDreamCanvas();
+
+    // Boot to menu
+    stateManager.setState(GameState.MENU);
+  }
+
+  // ── Input ──────────────────────────────────────────────
+  _setupInput() {
+    window.addEventListener('keydown', e => {
+      const k = e.key.toLowerCase();
+      if (!this.keys[k]) this.keysJust[k] = true;
+      this.keys[k] = true;
+
+      // Dialogue advance
+      if ((k === 'e' || k === 'enter' || k === ' ') && dialogue.isActive()) {
+        e.preventDefault();
+        dialogue.advance();
+      }
+      // Attack keys don't bubble
+      if (['j','k','l'].includes(k)) e.preventDefault();
+    });
+    window.addEventListener('keyup', e => {
+      this.keys[e.key.toLowerCase()] = false;
+    });
+
+    // Start button
+    document.getElementById('start-btn').addEventListener('click', () => {
+      audioManager.play('bedroom', 1);
+      this._startGame();
+    });
+  }
+
+  // ── State listeners ────────────────────────────────────
+  _setupStateListeners() {
+    stateManager.on('change', ({ from, to }) => {
+      // nothing extra yet
+    });
+  }
+
+  // ── Dream canvas (menu preview) ────────────────────────
+  _drawDreamCanvas() {
+    const dc = document.getElementById('dreamCanvas');
+    if (!dc) return;
+    const dctx = dc.getContext('2d');
+    let dt = 0, lastT = 0;
+
+    const drawDream = (ts) => {
+      const t = ts / 1000;
+      dt = t - lastT; lastT = t;
+
+      dctx.fillStyle = '#06040f';
+      dctx.fillRect(0,0,120,160);
+
+      // Stars
+      for(let i=0;i<20;i++) {
+        const x=(i*37)%120, y=(i*23)%100;
+        const a=0.3+0.5*Math.sin(t*2+i);
+        dctx.fillStyle=`rgba(200,220,255,${a})`;
+        dctx.fillRect(x,y,1,1);
+      }
+
+      // Dreaming character (lying down)
+      const by = 110 + Math.sin(t*1.5)*2;
+      // bed
+      dctx.fillStyle = '#2a1840';
+      dctx.fillRect(10, by+20, 100, 25);
+      dctx.fillStyle = '#3d2060';
+      dctx.fillRect(12, by+22, 96, 20);
+      // pillow
+      dctx.fillStyle = '#4a3070';
+      dctx.fillRect(10, by+15, 30, 18);
+      // body
+      dctx.fillStyle = '#2a3a5a';
+      dctx.fillRect(35, by+18, 65, 14);
+      // head
+      dctx.fillStyle = '#f0c898';
+      dctx.fillRect(14, by+14, 16, 14);
+      dctx.fillStyle = '#1a0a08';
+      dctx.fillRect(14, by+14, 16, 6);
+
+      // dream bubble
+      const bub = 0.5 + 0.5*Math.sin(t*2);
+      dctx.strokeStyle = `rgba(150,100,255,${0.3+bub*0.3})`;
+      dctx.lineWidth = 1;
+      dctx.beginPath();
+      dctx.arc(80, by-10, 18+bub*4, 0, Math.PI*2);
+      dctx.stroke();
+      // glitch symbol in bubble
+      dctx.fillStyle = `rgba(0,255,200,${0.4+bub*0.4})`;
+      dctx.font = '14px monospace';
+      dctx.textAlign = 'center';
+      dctx.fillText('?', 80, by-5);
+      dctx.textAlign = 'left';
+
+      // small dots connecting
+      [6,12,18].forEach((r,i)=>{
+        dctx.fillStyle=`rgba(150,100,255,${0.5-i*0.1})`;
+        dctx.beginPath();
+        dctx.arc(60+i*6, by-2-i*3, 2-i*0.3, 0, Math.PI*2);
+        dctx.fill();
+      });
+
+      // glitch scan
+      if(Math.sin(t*4)>0.9) {
+        dctx.fillStyle=`rgba(0,255,200,${Math.random()*0.15})`;
+        dctx.fillRect(0,Math.random()*160,120,2);
+      }
+
+      requestAnimationFrame(drawDream);
+    };
+    requestAnimationFrame(drawDream);
+  }
+
+  // ── Game start ─────────────────────────────────────────
+  _startGame() {
+    document.getElementById('menu-screen').style.display = 'none';
+    stateManager.setState(GameState.CUTSCENE);
+    this._loadRoom('bedroom');
+    this.cutsceneTimer = 0;
+    this.cutscenePhase = 0;
+
+    // Show opening dialogue
+    setTimeout(() => {
+      dialogue.show([
+        { name: 'You',  text: 'What a strange dream…' },
+        { name: '',     text: '…' },
+        { name: 'You',  text: 'It felt so real. Like the world outside was the dream.' },
+        { name: '',     text: '[ The window flickers. ]' },
+        { name: 'You',  text: 'I should get up. Go outside. Maybe some fresh air.' },
+      ], () => {
+        audioManager.play('surface', 1.5);
+        this._fadeToRoom('house');
+      });
+    }, 800);
+
+    requestAnimationFrame(ts => this._loop(ts));
+  }
+
+  // ── Room management ────────────────────────────────────
+  _loadRoom(roomId, spawnX, spawnY) {
+    const data = ROOMS[roomId];
+    this.currentRoom = data;
+
+    const sx = spawnX !== undefined ? spawnX : data.spawnX;
+    const sy = spawnY !== undefined ? spawnY : data.spawnY;
+    this.player = new Player(sx, sy - 48);
+
+    // Enemies
+    this.enemies = (data.enemies || []).map(ed => {
+      const e = new Enemy(ed.x, ed.y);
+      return e;
+    });
+
+    // NPCs
+    this.npcs = (data.npcs || []).map(key => new NPC(key));
+
+    // Adjust glitch level by room
+    const glitchMap = { bedroom: 0.1, house: 0.0, town: 0.05, college: 0.15, beneath: 0.6, core: 0.9 };
+    this.glitchLevel = glitchMap[roomId] || 0;
+
+    if (roomId !== 'bedroom' && !stateManager.is(GameState.CUTSCENE)) {
+      stateManager.setState(GameState.PLAYING);
+    }
+
+    this.coreDialogTriggered = false;
+  }
+
+  _fadeToRoom(roomId, toX, toY) {
+    if (this.transitioning) return;
+    this.transitioning = true;
+    this.overlay.classList.add('fade-in');
+    setTimeout(() => {
+      this._loadRoom(roomId, toX, toY);
+      audioManager.play(this.currentRoom.music, 1);
+      this.overlay.classList.remove('fade-in');
+      this.overlay.classList.add('fade-out');
+      setTimeout(() => {
+        this.overlay.classList.remove('fade-out');
+        this.transitioning = false;
+        stateManager.setState(GameState.PLAYING);
+      }, 600);
+    }, 550);
+  }
+
+  // ── Main loop ──────────────────────────────────────────
+  _loop(ts) {
+    const dt = Math.min((ts - this.lastTime) / 1000, 0.05);
+    this.lastTime = ts;
+    this.time    += dt;
+    this.keysJust = {};
+
+    this.update(dt);
+    this.draw();
+
+    requestAnimationFrame(ts => this._loop(ts));
+  }
+
+  // ── Update ─────────────────────────────────────────────
+  update(dt) {
+    if (!this.currentRoom) return;
+    const state = stateManager.current;
+
+    if (state === GameState.PLAYING) {
+      const plats = this.currentRoom.platforms;
+
+      // Player
+      this.player.applyInput(this.keys, dt);
+      this.player.update(dt, plats);
+
+      // NPCs
+      this.npcs.forEach(npc => npc.update(dt, this.player.x));
+
+      // Enemies
+      this.enemies.forEach(en => en.update(dt, this.player, plats));
+
+      // Player attack vs enemies
+      const atkBox = this.player.getAttackBox();
+      if (atkBox) {
+        this.enemies.forEach(en => {
+          if (!en.isDead() && this._rectsOverlap(atkBox, en)) {
+            if (!this.player.attackHit[atkBox.id]) {
+              const knockDir = en.x > this.player.x ? 1 : -1;
+              en.takeDamage(atkBox.dmg, knockDir);
+              this.player.attackHit[atkBox.id] = true;
+            }
+          }
+        });
+      }
+
+      // NPC interaction
+      if (this.keys['e'] && !dialogue.isActive()) {
+        for (const npc of this.npcs) {
+          if (npc.isNear(this.player)) {
+            const lines = npc.interact(this.afterEnding);
+            dialogue.show(lines);
+            break;
+          }
+        }
+      }
+
+      // Room exits
+      if (!this.transitioning) {
+        for (const exit of (this.currentRoom.exits || [])) {
+          if (this._playerInRect(exit)) {
+            this._handleExit(exit);
+            break;
+          }
+        }
+      }
+
+      // Core room: trigger ending dialogue
+      if (this.currentRoom.id === 'core' && !this.coreDialogTriggered && !dialogue.isActive()) {
+        const oracle = this.npcs.find(n => n.key === 'oracle');
+        if (oracle && oracle.isNear(this.player)) {
+          this.coreDialogTriggered = true;
+          const lines = oracle.interact();
+          dialogue.show(lines, () => this._triggerEnding());
+        }
+      }
+
+      // Player death -> respawn
+      if (this.player.isDead()) {
+        setTimeout(() => {
+          this._loadRoom(this.currentRoom.id);
+          this.player.heal(50);
+          stateManager.setState(GameState.PLAYING);
+        }, 1500);
+      }
+    }
+  }
+
+  _handleExit(exit) {
+    if (exit.to === 'core') {
+      audioManager.play('core', 1.5);
+    }
+    this._fadeToRoom(exit.to, exit.toX, exit.toY);
+  }
+
+  _triggerEnding() {
+    this.afterEnding = true;
+    audioManager.play('ending', 2);
+    this._fadeToRoom('house', 80, 380);
+    // After returning to house, show ending screen
+    setTimeout(() => {
+      // Update NPCs to alt dialogue (already handled via afterEnding flag)
+      dialogue.show([
+        { name: '', text: '[ You surface. The house looks the same. ]' },
+        { name: '', text: '[ But you know what it is now. ]' },
+        { name: 'You', text: 'I can see the seams.' },
+        { name: '', text: '[ The walls flicker, just slightly. ]' },
+        { name: 'You', text: '...It\'s okay.' },
+      ], () => {
+        setTimeout(() => this._showEnding(), 1200);
+      });
+    }, 1400);
+  }
+
+  _showEnding() {
+    const el = document.getElementById('ending-screen');
+    el.classList.remove('hidden');
+    audioManager.fadeTo(0, 3);
+    // Add glitch overlay on ending screen
+    el.style.animation = 'none';
+    el.style.opacity = '0';
+    let op = 0;
+    const fade = setInterval(() => {
+      op = Math.min(1, op + 0.02);
+      el.style.opacity = op;
+      if (op >= 1) clearInterval(fade);
+    }, 30);
+  }
+
+  // ── Draw ───────────────────────────────────────────────
+  draw() {
+    if (!this.currentRoom) return;
+    const ctx = this.ctx;
+    const t = this.time;
+
+    // Draw background
+    this.currentRoom.drawBg(ctx, t);
+
+    // Draw platforms (slightly visible for debug, styled)
+    this._drawPlatforms(ctx);
+
+    // Draw exits (subtle indicators)
+    this._drawExits(ctx, t);
+
+    // Draw NPCs
+    this.npcs.forEach(npc => npc.draw(ctx, this.glitchLevel));
+
+    // Draw enemies
+    this.enemies.forEach(en => en.draw(ctx));
+
+    // Draw player
+    if (this.player) this.player.draw(ctx, this.glitchLevel);
+
+    // NPC interaction hints
+    this._drawInteractHints(ctx, t);
+
+    // Room label
+    this._drawRoomLabel(ctx, t);
+
+    // Scan line overlay
+    this._drawScanLines(ctx);
+
+    // Global glitch effect
+    if (this.glitchLevel > 0) this._applyGlitch(ctx, t);
+
+    // Bedroom cutscene overlay
+    if (stateManager.is(GameState.CUTSCENE)) {
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(0, 0, 800, 500);
+    }
+  }
+
+  _drawPlatforms(ctx) {
+    // Only draw non-floor platforms as subtle ledges
+    this.currentRoom.platforms.forEach((p, i) => {
+      if (p.y >= 460) return; // skip floor
+      ctx.fillStyle = this.currentRoom.id.startsWith('beneath') || this.currentRoom.id === 'core'
+        ? 'rgba(0,255,100,0.12)'
+        : 'rgba(200,200,220,0.15)';
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+
+      // Top edge highlight
+      ctx.fillStyle = this.currentRoom.id.startsWith('beneath') || this.currentRoom.id === 'core'
+        ? 'rgba(0,255,100,0.3)'
+        : 'rgba(255,255,255,0.2)';
+      ctx.fillRect(p.x, p.y, p.w, 2);
+    });
+  }
+
+  _drawExits(ctx, t) {
+    (this.currentRoom.exits || []).forEach(exit => {
+      const pulse = 0.4 + 0.3 * Math.sin(t * 2);
+      ctx.fillStyle = `rgba(0,255,200,${pulse * 0.15})`;
+      ctx.fillRect(exit.x, exit.y, exit.w, exit.h);
+
+      ctx.strokeStyle = `rgba(0,255,200,${pulse * 0.5})`;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(exit.x, exit.y, exit.w, exit.h);
+
+      // Label
+      ctx.fillStyle = `rgba(0,255,200,${pulse * 0.7})`;
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(exit.label, exit.x + exit.w/2, exit.y - 4);
+      ctx.textAlign = 'left';
+    });
+  }
+
+  _drawInteractHints(ctx, t) {
+    if (dialogue.isActive()) return;
+    const pulse = 0.5 + 0.5 * Math.sin(t * 3);
+    this.npcs.forEach(npc => {
+      if (npc.isNear(this.player)) {
+        ctx.fillStyle = `rgba(255,255,200,${pulse * 0.9})`;
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('[E] Talk', npc.x + npc.w/2, npc.y - 8);
+        ctx.textAlign = 'left';
+      }
+    });
+  }
+
+  _drawRoomLabel(ctx, t) {
+    const label = this.currentRoom.label;
+    const alpha = Math.min(1, t * 0.5) * 0.6;
+    ctx.fillStyle = `rgba(0,255,200,${alpha})`;
+    ctx.font = '11px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(label, 790, 20);
+    ctx.textAlign = 'left';
+  }
+
+  _drawScanLines(ctx) {
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    for (let y = 0; y < 500; y += 4) {
+      ctx.fillRect(0, y, 800, 2);
+    }
+  }
+
+  _applyGlitch(ctx, t) {
+    const g = this.glitchLevel;
+    // Horizontal glitch slices
+    if (Math.sin(t * 7.3) > 1 - g * 0.4) {
+      const gy = Math.random() * 500;
+      const gh = 4 + Math.random() * 10;
+      const gx = (Math.random() - 0.5) * 30 * g;
+      ctx.save();
+      const imageData = ctx.getImageData(0, gy, 800, gh);
+      ctx.putImageData(imageData, gx, gy);
+      ctx.restore();
+    }
+
+    // Color channel shift
+    if (Math.sin(t * 5.1) > 1 - g * 0.3) {
+      ctx.fillStyle = `rgba(255,0,50,0.04)`;
+      ctx.fillRect(-3, 0, 800, 500);
+      ctx.fillStyle = `rgba(0,255,200,0.04)`;
+      ctx.fillRect(3, 0, 800, 500);
+    }
+
+    // CRT vignette
+    const vg = ctx.createRadialGradient(400,250,200,400,250,420);
+    vg.addColorStop(0,'transparent');
+    vg.addColorStop(1,`rgba(0,0,0,${g*0.4})`);
+    ctx.fillStyle = vg;
+    ctx.fillRect(0,0,800,500);
+  }
+
+  // ── Utilities ──────────────────────────────────────────
+  _rectsOverlap(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x &&
+           a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  _playerInRect(rect) {
+    if (!this.player) return false;
+    const px = this.player.x + this.player.w/2;
+    const py = this.player.y + this.player.h/2;
+    return px > rect.x && px < rect.x+rect.w &&
+           py > rect.y && py < rect.y+rect.h;
+  }
+}
+
+// ── Boot ───────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  window.game = new Game();
+});
+
+  </script>
+</body>
+</html>
